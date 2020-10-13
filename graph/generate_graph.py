@@ -34,8 +34,9 @@ def generate_graph(n, max_neighbours=999):
 
         n -= n_neighbours
 
-    print([(node.data, list(map(lambda x: x.data, node.neighbours))) for node in nodes])
-
+    #print([(node.data, list(map(lambda x: x.data, node.neighbours))) for node in nodes])
+    for node in nodes:
+        print(str(node.data) +"    and "+str(node.neighbours)) 
 
 if __name__ == "__main__":
     generate_graph(10, 2)
