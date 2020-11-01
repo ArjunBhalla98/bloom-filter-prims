@@ -4,7 +4,7 @@ import mmh3
 
 
 class BloomFilter:
-    def __init__(self, n, epsilon=0.01):
+    def __init__(self, n, epsilon=0.1):
         """
         Parameters:
         n: int: size of data (used to determine m, size of bucket list)
