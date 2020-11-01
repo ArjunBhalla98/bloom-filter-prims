@@ -4,7 +4,7 @@ import mmh3
 
 
 class BloomFilter:
-    def __init__(self, n, epsilon=0.01):
+    def __init__(self, n, epsilon=0.1):
         """
         Parameters:
         n: int: size of data (used to determine m, size of bucket list)
@@ -19,14 +19,14 @@ class BloomFilter:
         """
         self.size = n
         # Formula from Wikipedia on Optimal Hash fns
-        self._m = (-n * math.log(epsilon)) // math.pow(math.log(2), 2)
-        self._k = (self._m * math.log(2)) // n  # Also from Wikipedia
+        self._m = int((-n * math.log(epsilon)) / math.pow(math.log(2), 2))
+        self._k = int((self._m * math.log(2)) / n)  # Also from Wikipedia
         self._bit_array = [0] * self._m
         self._n_filled = 0
 
     @property
     def percentage_filled(self):
-        return (self._n_filled / len(self._bit_array)) * 100
+        return str(round((self._n_filled / len(self._bit_array)) * 100, 3)) + "%"
 
     @property
     def memory_used(self):
@@ -55,6 +55,18 @@ class BloomFilter:
                 return False
 
         return True
+
+    def get_internals(self):
+        """
+        Returns internal values - mostly for charting and correlation analysis.
+        """
+        return {
+            "k": self._k,
+            "m": self._m,
+            "n": self.size,
+            "space": self.memory_used,
+            "filled": self.percentage_filled,
+        }
 
     def _get_bucket_idxes(self, element):
         idxes = []

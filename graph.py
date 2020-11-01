@@ -82,7 +82,7 @@ class Graph:
                         heapq.heappush(edges, (cost, to, to_next))
 
         print(f"Set Space: {sys.getsizeof(visited)} Bytes")
-        return mst, total_cost
+        return mst, total_cost, sys.getsizeof(visited)
 
     @staticmethod
     def bloom_minimum_spanning_tree(graph, starting_vertex):
@@ -109,7 +109,7 @@ class Graph:
             "Bloom Filter Space: " + str(visited.memory_used),
             "Bloom Filter Filled: " + str(visited.percentage_filled),
         )
-        return mst, total_cost
+        return mst, total_cost, visited.get_internals()
 
 
 example_graph = {
@@ -123,7 +123,7 @@ example_graph = {
 }
 
 if __name__ == "__main__":
-    test_graph = Graph(25000)
+    test_graph = Graph(1000000)
     # print(test_graph)
 
     set_tree, set_cost = Graph.minimum_spanning_tree(test_graph.graph, "A")
