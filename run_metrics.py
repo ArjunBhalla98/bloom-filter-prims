@@ -15,7 +15,7 @@ class MetricRunner:
     def __init__(self):
         pass
 
-    def cost_size_compare(self, start=1000, end=51000, interval=5000):
+    def cost_size_compare(self, start=1000, end=101000, interval=10000):
         # Index of all of these corresponds to the relative graph size (i.e. x[0] is the result for mst(graph(start)))
         graph_size = []
         basic_prims_space = []
@@ -80,7 +80,7 @@ class ChartGenerator:
             "Graph Size (# Nodes)",
             "Cost of MST",
             "Graph Size vs Calculated Cost",
-            "cost.png",
+            f"cost{self.data['g_size'][-1]//1000}k.png",
         )
 
     def plot_cost_difference(self):
@@ -96,7 +96,7 @@ class ChartGenerator:
             "Graph Size (# Nodes)",
             "Space Consumed (Bytes)",
             "Graph Size vs Space Consumed",
-            "space.png",
+            f"space{self.data['g_size'][-1]//1000}k.png",
         )
 
     def plot_comparison(

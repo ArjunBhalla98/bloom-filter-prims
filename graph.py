@@ -46,7 +46,7 @@ class Graph:
                 if neighbour != node:
                     graph[node][neighbour] = cost
                     graph[neighbour][node] = cost
-        print("Graph Generated.")
+        print("Graph Generated.\n")
         return graph
 
     def _get_letter(self, n):
@@ -81,7 +81,7 @@ class Graph:
                     if to_next not in visited:
                         heapq.heappush(edges, (cost, to, to_next))
 
-        print(f"Set Space: {sys.getsizeof(visited)} Bytes")
+        print(f"Set Space: {sys.getsizeof(visited)} Bytes\n")
         return mst, total_cost, sys.getsizeof(visited)
 
     @staticmethod
@@ -109,6 +109,7 @@ class Graph:
             "Bloom Filter Space: " + str(visited.memory_used),
             "Bloom Filter Filled: " + str(visited.percentage_filled),
         )
+        print()
         return mst, total_cost, visited.get_internals()
 
 
