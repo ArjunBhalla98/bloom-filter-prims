@@ -15,7 +15,7 @@ class MetricRunner:
     def __init__(self):
         pass
 
-    def cost_size_compare(self, start=1000, end=101000, interval=10000):
+    def cost_size_compare(self, start=1000, end=61000, interval=10000):
         # Index of all of these corresponds to the relative graph size (i.e. x[0] is the result for mst(graph(start)))
         graph_size = []
         basic_prims_space = []

@@ -1,10 +1,11 @@
 import math
 import sys
 import mmh3
+from bitarray import bitarray
 
 
 class BloomFilter:
-    def __init__(self, n, epsilon=0.1):
+    def __init__(self, n, epsilon=0.01):
         """
         Parameters:
         n: int: size of data (used to determine m, size of bucket list)
@@ -21,7 +22,8 @@ class BloomFilter:
         # Formula from Wikipedia on Optimal Hash fns
         self._m = int((-n * math.log(epsilon)) / math.pow(math.log(2), 2))
         self._k = int((self._m * math.log(2)) / n)  # Also from Wikipedia
-        self._bit_array = [0] * self._m
+        self._bit_array = bitarray(self._m)
+        self._bit_array.setall(0)
         self._n_filled = 0
 
     @property
@@ -39,7 +41,7 @@ class BloomFilter:
         buckets = self._get_bucket_idxes(element)
 
         for bucket_idx in buckets:
-            if self._bit_array[bucket_idx] == 0:
+            if not self._bit_array[bucket_idx]:
                 self._n_filled += 1
 
             self._bit_array[bucket_idx] = 1
@@ -51,7 +53,7 @@ class BloomFilter:
         buckets = self._get_bucket_idxes(element)
 
         for bucket_idx in buckets:
-            if self._bit_array[bucket_idx] == 0:
+            if not self._bit_array[bucket_idx]:
                 return False
 
         return True
