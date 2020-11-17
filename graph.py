@@ -4,6 +4,7 @@ import sys
 import string
 import random
 from collections import defaultdict
+from bitarray import bitarray
 import heapq
 
 
@@ -34,6 +35,7 @@ class Graph:
         for i in range(n):
             graph[self._get_letter(i)] = {}
 
+        edge_idx = 0
         # Populate Graph
         for node in graph:
             n_neighbours = random.randint(min_neighbours, max_neighbours)
@@ -44,8 +46,11 @@ class Graph:
                 neighbour = random.choice(list(graph.keys()))
 
                 if neighbour != node:
-                    graph[node][neighbour] = cost
-                    graph[neighbour][node] = cost
+                    graph[node][neighbour] = (cost, edge_idx)
+                    graph[neighbour][node] = (cost, edge_idx)
+                    edge_idx += 1
+
+        graph[-1] = edge_idx  # Equivalent to # of edges. Probably bad practice but w/e
         print("Graph Generated.\n")
         return graph
 
@@ -60,57 +65,80 @@ class Graph:
 
         return "".join(result[::-1])
 
+    # Remember: Cost[1] is edge idx
     @staticmethod
-    def minimum_spanning_tree(graph, starting_vertex):
+    def minimum_spanning_tree(graph, starting_vertex, return_bit_graph=False):
         print("Starting to calculate regular MST...")
         mst = defaultdict(set)
         visited = set([starting_vertex])
+        edge_map = bitarray(graph[-1])
+        edge_map.setall(0)
+
         edges = [
-            (cost, starting_vertex, to) for to, cost in graph[starting_vertex].items()
+            (cost[0], cost[1], starting_vertex, to)
+            for to, cost in graph[starting_vertex].items()
         ]
         heapq.heapify(edges)
         total_cost = 0
 
         while edges:
-            cost, frm, to = heapq.heappop(edges)
+            cost, edge_idx, frm, to = heapq.heappop(edges)
+
             if to not in visited:
                 visited.add(to)
                 total_cost += cost
                 mst[frm].add(to)
+                edge_map[edge_idx] = 1
                 for to_next, cost in graph[to].items():
                     if to_next not in visited:
-                        heapq.heappush(edges, (cost, to, to_next))
+                        heapq.heappush(edges, (cost[0], cost[1], to, to_next))
 
         print(f"Set Space: {sys.getsizeof(visited)} Bytes\n")
-        return mst, total_cost, sys.getsizeof(visited)
+        if not return_bit_graph:
+            return total_cost, sys.getsizeof(visited)
+        else:
+            return total_cost, sys.getsizeof(visited), edge_map
 
     @staticmethod
-    def bloom_minimum_spanning_tree(graph, starting_vertex):
+    def bloom_minimum_spanning_tree(graph, starting_vertex, return_bit_graph=False):
         print("Starting Bloom Filter MST...")
         mst = defaultdict(set)
         visited = bloom_filter.BloomFilter(len(graph.keys()))  # Replace set w/ Bloom
+
+        edge_map = bitarray(graph[-1])
+        edge_map.setall(0)
+
         edges = [
-            (cost, starting_vertex, to) for to, cost in graph[starting_vertex].items()
+            (cost[0], cost[1], starting_vertex, to)
+            for to, cost in graph[starting_vertex].items()
         ]
         heapq.heapify(edges)
         total_cost = 0
 
         while edges:
-            cost, frm, to = heapq.heappop(edges)
+            cost, edge_idx, frm, to = heapq.heappop(edges)
             if not visited.probabilistic_contains(to):
                 visited.add(to)
                 total_cost += cost
                 mst[frm].add(to)
+                edge_map[edge_idx] = 1
                 for to_next, cost in graph[to].items():
                     if not visited.probabilistic_contains(to_next):
-                        heapq.heappush(edges, (cost, to, to_next))
+                        heapq.heappush(edges, (cost[0], cost[1], to, to_next))
 
+        edge_map_space = sys.getsizeof(edge_map)
+        bf_space = visited.memory_used
         print(
-            "Bloom Filter Space: " + str(visited.memory_used),
+            "Bloom Filter Space: " + str(bf_space),
             "Bloom Filter Filled: " + str(visited.percentage_filled),
+            "Graph storage space: " + str(edge_map_space),
+            "Total storage space: " + str(bf_space + edge_map_space),
         )
         print()
-        return mst, total_cost, visited.get_internals()
+        if not return_bit_graph:
+            return total_cost, visited.get_internals()
+        else:
+            return total_cost, visited.get_internals(), edge_map
 
 
 example_graph = {
@@ -124,11 +152,13 @@ example_graph = {
 }
 
 if __name__ == "__main__":
-    test_graph = Graph(1000000)
+    test_graph = Graph(10000)
     # print(test_graph)
 
-    set_tree, set_cost = Graph.minimum_spanning_tree(test_graph.graph, "A")
-    bf_tree, bf_cost = Graph.bloom_minimum_spanning_tree(test_graph.graph, "A")
+    set_tree, set_cost, size = Graph.minimum_spanning_tree(test_graph.graph, "A")
+    bf_tree, bf_cost, internals = Graph.bloom_minimum_spanning_tree(
+        test_graph.graph, "A"
+    )
 
     print(f"Set Tree, Set Cost: (too long), {set_cost}")
     print(f"BF Tree, BF Cost: (too long), {bf_cost}")
