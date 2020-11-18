@@ -28,10 +28,12 @@ class MetricRunner:
         # Counts the *absolute number* of edges that are missing in the bloom filter version
         if map_edges:
             edge_diff = []
+            total_edges = []
 
         for i in range(start, end + 1, interval):
             graph_size.append(i)
-            graph = Graph(i).graph
+            graph_obj = Graph(i)
+            graph = graph_obj.graph
 
             if not map_edges:
                 basic_cost, space = Graph.minimum_spanning_tree(graph, "A")
@@ -47,7 +49,7 @@ class MetricRunner:
                 ) = Graph.bloom_minimum_spanning_tree(graph, "A", True)
                 bloom_stats["space"] += sys.getsizeof(bloom_edges)
                 edge_diff.append(abs(basic_edges.count() - bloom_edges.count()))
-                print(edge_diff)
+                total_edges.append(len(basic_edges))
 
             basic_prims_space.append(space)
             basic_prims_cost.append(basic_cost)
@@ -74,6 +76,7 @@ class MetricRunner:
                 bloom_prims_cost,
                 bloom_prims_stats,
                 edge_diff,
+                total_edges,
             )
 
 
@@ -102,8 +105,10 @@ class ChartGenerator:
                 bl_cost,
                 bl_stats,
                 edge_diff,
+                total_edges,
             ) = self.metric_runner.cost_size_compare(map_edges=True)
             self.data["edge_diff"] = edge_diff
+            self.data["n_edges"] = total_edges
 
         self.data["g_size"] = g_size
         self.data["ba_space"] = ba_space
@@ -130,10 +135,10 @@ class ChartGenerator:
         assert "edge_diff" in self.data
 
         self.plot_singular(
-            self.data["g_size"],
+            self.data["n_edges"],
             self.data["edge_diff"],
             "Absolute difference in edge set size",
-            "Graph Size (# Nodes)",
+            "Graph Size (# Edges total)",
             "Graph Size vs Edge Set Difference",
             f"edges{self.data['g_size'][-1]//1000}k.png",
         )

@@ -18,6 +18,7 @@ class Graph:
     def __init__(self, n):
         self.size = n
         self.graph = self._generate_graph(n)
+        self.n_edges = 0
 
     def __str__(self):
         return str(self.graph)
@@ -51,6 +52,7 @@ class Graph:
                     edge_idx += 1
 
         graph[-1] = edge_idx  # Equivalent to # of edges. Probably bad practice but w/e
+        self.n_edges = edge_idx
         print("Graph Generated.\n")
         return graph
 
