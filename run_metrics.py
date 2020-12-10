@@ -16,7 +16,7 @@ class MetricRunner:
     def __init__(self):
         pass
 
-    def cost_size_compare(self, start=1000, end=61000, interval=10000, map_edges=False):
+    def cost_size_compare(self, start=1000, end=41000, interval=10000, map_edges=False):
         # Index of all of these corresponds to the relative graph size (i.e. x[0] is the result for mst(graph(start)))
         graph_size = []
         basic_prims_space = []
@@ -49,7 +49,7 @@ class MetricRunner:
                 ) = Graph.bloom_minimum_spanning_tree(graph, "A", True)
                 bloom_stats["space"] += sys.getsizeof(bloom_edges)
                 edge_diff.append(abs(basic_edges.count() - bloom_edges.count()))
-                total_edges.append(len(basic_edges))
+                total_edges.append(basic_edges.count())
 
             basic_prims_space.append(space)
             basic_prims_cost.append(basic_cost)
@@ -138,7 +138,7 @@ class ChartGenerator:
             self.data["n_edges"],
             self.data["edge_diff"],
             "Absolute difference in edge set size",
-            "Graph Size (# Edges total)",
+            "Graph Size (# Edges in MST)",
             "Graph Size vs Edge Set Difference",
             f"edges{self.data['g_size'][-1]//1000}k.png",
         )
