@@ -1,3 +1,7 @@
 mmh3
 matplotlib
 bitarray
+numpy
+scipy
+scikit-learn
+mst_clustering
