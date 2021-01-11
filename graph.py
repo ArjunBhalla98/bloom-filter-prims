@@ -15,13 +15,21 @@ class Graph:
     Parameters:
     """
 
-    def __init__(self, n):
+    def __init__(self, n, random=False):
         self.size = n
-        self.graph = self._generate_graph(n)
+        if random:
+            self.graph = self._generate_graph(n)
+        else:
+            self.graph = defaultdict(dict)
         self.n_edges = 0
 
     def __str__(self):
         return str(self.graph)
+
+    def add_undirected_edge(self, source, sink, cost):
+        self.graph[source][sink] = (cost, self.n_edges)
+        self.graph[sink][source] = (cost, self.n_edges)
+        self.n_edges += 1
 
     def _generate_graph(
         self, n, min_neighbours=1, max_neighbours=25, min_cost=1, max_cost=50
@@ -69,11 +77,12 @@ class Graph:
 
     # Remember: Cost[1] is edge idx
     @staticmethod
-    def minimum_spanning_tree(graph, starting_vertex, return_bit_graph=False):
+    def minimum_spanning_tree(graph_obj, starting_vertex, return_bit_graph=False):
         print("Starting to calculate regular MST...")
+        graph = graph_obj.graph
         mst = defaultdict(set)
         visited = set([starting_vertex])
-        edge_map = bitarray(graph[-1])
+        edge_map = bitarray(graph_obj.n_edges)
         edge_map.setall(0)
 
         edges = [
@@ -102,12 +111,13 @@ class Graph:
             return total_cost, sys.getsizeof(visited), edge_map
 
     @staticmethod
-    def bloom_minimum_spanning_tree(graph, starting_vertex, return_bit_graph=False):
+    def bloom_minimum_spanning_tree(graph_obj, starting_vertex, return_bit_graph=False):
         print("Starting Bloom Filter MST...")
+        graph = graph_obj.graph
         mst = defaultdict(set)
         visited = bloom_filter.BloomFilter(len(graph.keys()))  # Replace set w/ Bloom
 
-        edge_map = bitarray(graph[-1])
+        edge_map = bitarray(graph_obj.n_edges)
         edge_map.setall(0)
 
         edges = [
@@ -119,13 +129,13 @@ class Graph:
 
         while edges:
             cost, edge_idx, frm, to = heapq.heappop(edges)
-            if not visited.probabilistic_contains(to):
-                visited.add(to)
+            if not visited.probabilistic_contains(str(to)):
+                visited.add(str(to))
                 total_cost += cost
                 mst[frm].add(to)
                 edge_map[edge_idx] = 1
                 for to_next, cost in graph[to].items():
-                    if not visited.probabilistic_contains(to_next):
+                    if not visited.probabilistic_contains(str(to_next)):
                         heapq.heappush(edges, (cost[0], cost[1], to, to_next))
 
         edge_map_space = sys.getsizeof(edge_map)
