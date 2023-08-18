@@ -1,23 +1,19 @@
-import sklearn
+import argparse
+
 import numpy as np
 import imageio
-import random
-import heapq
 from graph import Graph
-import matplotlib.pyplot as plt
-from mst_clustering import MSTClustering
-from scipy import ndimage
 
-TEST_FILE_SAVE_PATH = "./results/images/test.jpg"
-BLOOM_FILE_SAVE_PATH = "./results/images/bloom.jpg"
-HORSE_IMAGE = "./images/BSDS300/images/test/3096.jpg"
-
-"""
-Next steps:
-
-1. Instead of having all the points connected to each other, they should only be connected to their (max 8) direct neighbours
-2. implement a full scale / try to scale this up without segfault to BSDS image sets
-"""
+parser = argparse.ArgumentParser()
+parser.add_argument("--source_img")
+parser.add_argument("--bl_save_path")
+parser.add_argument("--reg_save_path")
+parser.add_argument("--cost_threshold", default=100, type=int)
+args = parser.parse_args()
+REG_IMAGE_SAVE_PATH = args.reg_save_path 
+BLOOM_IMAGE_SAVE_PATH = args.bl_save_path 
+SOURCE_IMAGE = args.source_img 
+COST_THRESHOLD = args.cost_threshold
 
 
 def image_to_graph(img):
@@ -126,20 +122,6 @@ def mst_to_labels(starting_node, graph_obj, bit_array, cost_threshold, image_siz
 
             q = next_level
 
-    # heap = []
-
-    # for i, j in graph:
-    #     for k, l in graph[(i, j)]:
-    #         n = graph[(i, j)][(k, l)]
-    #         if bit_array[n[1]]:
-    #             heapq.heappush(heap, (-n[0], n[1]))
-
-    # n_clusters = 0
-    # for _ in range(n_clusters - 1):
-    #     cost, idx = heapq.heappop(heap)
-    #     print(-cost)
-    #     bit_array[idx] = 0
-
     for i in range(image_size[0]):
         for j in range(image_size[1]):
             if labels[i][j] == -1:
@@ -158,40 +140,18 @@ def get_distance_tuple(a, b):
 
 
 if __name__ == "__main__":
-    # img = imageio.imread(HORSE_IMAGE)
-    # print("Image Loaded")
-    # # img = np.mean(img, 2)
-    # img = img[201:, 321:, :]
+    colours = [[255, 255, 255], [122, 122, 122], [255, 0, 0], [0, 255, 0], [0, 0, 255], [0, 0, 0]]
 
-    # a = len(img)
-    # b = len(img[0])
-    # img = np.reshape(img, (len(img) * len(img[0]), 3))
-    # print("Image reshaped")
-    # model = sklearn
-    # model = MSTClustering(cutoff_scale=4.3, approximate=False)
-    # print("Model init")
-    # labels = model.fit_predict(img)
-    # print("Labelled")
-
-    colours = [[255, 255, 255], [0, 0, 0], [255, 0, 0], [0, 255, 0], [0, 0, 255]]
-
-    # for i in range(len(img)):
-    #     img[i] = colours[labels[i] % len(colours)]
-
-    # img = np.reshape(img, (a, b, 3))
-
-    # # print(labels)
-    # imageio.imsave(TEST_FILE_SAVE_PATH, img)
-    # # print("Image Saved")
-
-    img = imageio.imread(HORSE_IMAGE)
+    img = imageio.imread(SOURCE_IMAGE)
     print("Image Loaded")
+
     g = image_to_graph(img)
+    print(g.n_edges, img.shape)
     cost, _, bit_array = Graph.minimum_spanning_tree(g, (0, 0), True)
-    cost_bloom, _, bloom_bit_array = Graph.bloom_minimum_spanning_tree(g, (0, 0), True)
-    labels = mst_to_labels((0, 0), g, bit_array, 100, (len(img), len(img[0])))
+    cost_bloom, _, bloom_bit_array, space_total = Graph.bloom_minimum_spanning_tree(g, (0, 0), True)
+    labels = mst_to_labels((0, 0), g, bit_array, COST_THRESHOLD, (len(img), len(img[0])))
     bloom_labels = mst_to_labels(
-        (0, 0), g, bloom_bit_array, 100, (len(img), len(img[0]))
+        (0, 0), g, bloom_bit_array, COST_THRESHOLD, (len(img), len(img[0]))
     )
 
     final_image = np.zeros(img.shape)
@@ -200,9 +160,11 @@ if __name__ == "__main__":
     for i in range(len(final_image)):
         for j in range(len(final_image[0])):
             final_image[i][j] = colours[int(labels[i][j]) % len(colours)]
-            final_bloom[i][j] = colours[int(labels[i][j]) % len(colours)]
+            final_bloom[i][j] = colours[int(bloom_labels[i][j]) % len(colours)]
 
-    imageio.imsave(TEST_FILE_SAVE_PATH, labels)
-    imageio.imsave(BLOOM_FILE_SAVE_PATH, bloom_labels)
+    # imageio.imsave(REG_IMAGE_SAVE_PATH, final_image)
+    # imageio.imsave(BLOOM_IMAGE_SAVE_PATH, final_bloom)
+    imageio.imsave(REG_IMAGE_SAVE_PATH, labels)
+    imageio.imsave(BLOOM_IMAGE_SAVE_PATH, bloom_labels)
     print("Images Saved")
 
